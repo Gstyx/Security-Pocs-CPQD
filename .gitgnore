@@ -1,0 +1,11 @@
+# Foundry / Hardhat
+cache/
+artifacts/
+out/
+broadcast/
+node_modules/
+
+# Sistema / Editor
+.DS_Store
+.vscode/
+.env

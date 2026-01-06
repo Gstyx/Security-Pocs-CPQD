@@ -1,0 +1,86 @@
+NODE 1
+besu \
+  --data-path=data \
+  --genesis-file=../privateNetworkGenesis.json \
+  --miner-enabled \
+  --miner-coinbase=0xfe3b557e8fb62b89f4916b721be55ceb828dbd73 \
+  --rpc-http-enabled \
+  --rpc-http-api=ETH,NET,WEB3,ADMIN,MINER \
+  --rpc-http-host=0.0.0.0 \
+  --rpc-http-port=8545 \
+  --p2p-port=30303 \
+  --network-id=1337 \
+  --host-allowlist="*" \
+  --rpc-http-cors-origins="*"
+
+NODE 2
+
+besu \
+  --data-path=data \
+  --genesis-file=../privateNetworkGenesis.json \
+  --bootnodes=enode://3d5e770e1760391c422cc66027cf9982f8e6320d4af0b1b430c87d2d5581fc86dcf81e3a2f33be26fa75ddbb7cfa63519b4ab1541bc63717c78e2927c19c04fc@127.0.0.1:30303\
+  --p2p-port=30304 \
+  --rpc-http-enabled \
+  --rpc-http-api=ETH,NET,WEB3 \
+  --rpc-http-host=0.0.0.0 \
+  --rpc-http-port=8546 \
+  --network-id=1337 \
+  --profile=ENTERPRISE \
+  --miner-enabled \
+  --miner-coinbase=0xfe3b557e8fb62b89f4916b721be55ceb828dbd73
+
+
+node 3
+
+besu \
+  --data-path=data \
+  --genesis-file=../privateNetworkGenesis.json \
+  --miner-enabled \
+  --miner-coinbase=0xf17f52151EbEF6C7334FAD080c5704D77216b732 \
+  --rpc-http-enabled \
+  --rpc-http-api=ETH,NET,WEB3,ADMIN,MINER \
+  --rpc-http-host=0.0.0.0 \
+  --rpc-http-port=8547 \
+  --p2p-port=30305 \
+  --network-id=1337 \
+  --host-allowlist="*" \
+  --rpc-http-cors-origins="*"
+
+node 4
+besu \
+  --data-path=data \
+  --genesis-file=../privateNetworkGenesis.json \
+  --bootnodes=enode://db9a626d3d8c5cea988bf1ccba8cf58edcd08683a07bfcddba5f7440ded6d60e9289b71c5036a93a8bbd5a4d6b4ce322c380cc7c6f5235bff6ce5a80cdfed9ab@127.0.0.1:30305\
+  --p2p-port=30306 \
+  --rpc-http-enabled \
+  --rpc-http-api=ETH,NET,WEB3 \
+  --rpc-http-host=0.0.0.0 \
+  --rpc-http-port=8548 \
+  --network-id=1337 \
+  --profile=ENTERPRISE \
+  --miner-enabled \
+  --miner-coinbase=0xf17f52151EbEF6C7334FAD080c5704D77216b732
+
+node 5
+
+besu \
+  --data-path=data \
+  --genesis-file=../privateNetworkGenesis.json \
+  --bootnodes=enode://db9a626d3d8c5cea988bf1ccba8cf58edcd08683a07bfcddba5f7440ded6d60e9289b71c5036a93a8bbd5a4d6b4ce322c380cc7c6f5235bff6ce5a80cdfed9ab@127.0.0.1:30305\
+  --p2p-port=30307 \
+  --rpc-http-enabled \
+  --rpc-http-api=ETH,NET,WEB3 \
+  --rpc-http-host=0.0.0.0 \
+  --rpc-http-port=8549 \
+  --network-id=1337 \
+  --profile=ENTERPRISE \
+  --miner-enabled \
+  --miner-coinbase=0xf17f52151EbEF6C7334FAD080c5704D77216b732
+
+
+curl -X POST --data '{
+    "jsonrpc":"2.0",
+    "method":"admin_addPeer",
+    "params":["enode://db9a626d3d8c5cea988bf1ccba8cf58edcd08683a07bfcddba5f7440ded6d60e9289b71c5036a93a8bbd5a4d6b4ce322c380cc7c6f5235bff6ce5a80cdfed9ab@127.0.0.1:30305"],
+    "id":1
+}' http://127.0.0.1:8545
