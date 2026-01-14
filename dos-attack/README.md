@@ -336,6 +336,57 @@ function test_MultipleAttackersDoS() public {
 ```
 **O que testa:** Mesmo com múltiplos atacantes, basta UM para bloquear tudo.
 
+## 🔍 Análise de Vulnerabilidade (Slither)
+
+Para garantir a segurança do contrato e confirmar a vulnerabilidade de forma automatizada, utilizamos o **Slither**, uma ferramenta de análise estática padrão da indústria.
+
+### 1. Executando a Análise
+Para reproduzir a análise, execute o seguinte comando no terminal:
+
+```bash
+slither src/Vulnerable.sol
+
+INFO:Detectors:
+Vulnerable.distribute() (src/Vulnerable.sol#13-21) sends eth to arbitrary user
+	Dangerous calls:
+	- (success,None) = address(users[i]).call{value: amount}() (src/Vulnerable.sol#18)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+INFO:Detectors:
+Vulnerable.distribute() (src/Vulnerable.sol#13-21) has external calls inside a loop: (success,None) = address(users[i]).call{value: amount}() (src/Vulnerable.sol#18)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation/#calls-inside-a-loop
+INFO:Detectors:
+Version constraint ^0.8.20 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)
+	- VerbatimInvalidDeduplication
+	- FullInlinerNonExpressionSplitArgumentEvaluationOrder
+	- MissingSideEffectsOnSelectorAccess.
+It is used by:
+	- ^0.8.20 (src/Vulnerable.sol#2)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+INFO:Detectors:
+Low level call in Vulnerable.distribute() (src/Vulnerable.sol#13-21):
+	- (success,None) = address(users[i]).call{value: amount}() (src/Vulnerable.sol#18)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Detectors:
+Loop condition i < users.length (src/Vulnerable.sol#16) should use cached array length instead of referencing `length` member of the storage array.
+ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#cache-array-length
+INFO:Slither:src/Vulnerable.sol analyzed (1 contracts with 100 detectors), 5 result(s) found
+
+
+### Interpretação dos Riscos
+
+### Interpretação dos Riscos
+
+* 🔴 **`calls-loop` (Crítica)**
+    Confirma a presença de chamadas externas (`.call`) dentro de um laço `for`. Este é o vetor principal do **DoS**: se uma única transferência falhar, toda a função trava.
+
+* 🟠 **`arbitrary-send` (Média)**
+    Alerta que o contrato envia ETH para endereços arbitrários (os usuários). Exige validação rigorosa para evitar drenagem de fundos ou reentrância.
+
+* 🟡 **`cache-array-length` (Otimização/Gás)**
+    Detectou que `users.length` é lido do *storage* a cada volta do loop.
+    * **O Problema:** Ler do *storage* é uma operação cara (Opcode `SLOAD`).
+    * **Impacto no DoS:** O consumo excessivo de gás faz com que a transação atinja o **Block Gas Limit** muito mais rápido. Ou seja, o contrato trava com uma quantidade de usuários muito menor do que se o tamanho estivesse salvo em memória (`mload`).
+
 ## Solução: Pull Pattern
 
 ### VulnerableFixed.sol - Implementação Segura
