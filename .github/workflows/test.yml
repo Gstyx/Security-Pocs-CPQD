@@ -24,8 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd dos-attack
-          forge install
-
+          forge install foundry-rs/forge-std --no-commit
+          
       - name: Show Forge version
         run: |
           cd dos-attack
