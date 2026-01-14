@@ -1,18 +1,14 @@
 name: CI
 
 permissions: {}
-
 on:
   push:
   pull_request:
   workflow_dispatch:
 
-env:
-  FOUNDRY_PROFILE: ci
-
 jobs:
   check:
-    name: Foundry project
+    name: Deny of Service Attack Project
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,13 +22,26 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Show Forge version
-        run: forge --version
+        run: |
+          cd dos-attack
+          forge --version
 
       - name: Run Forge fmt
-        run: forge fmt --check
+        run: |
+          cd dos-attack
+          forge fmt --check
 
       - name: Run Forge build
-        run: forge build --sizes
+        run: |
+          cd dos-attack
+          forge build --sizes
 
       - name: Run Forge tests
-        run: forge test -vvv
+        run: |
+          cd dos-attack
+          forge test -vvv
+        
+      - name: Run Forge coverage
+        run: |
+          cd dos-attack
+          forge coverage --report summary
