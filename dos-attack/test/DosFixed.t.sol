@@ -35,35 +35,35 @@ contract DosFixedTest is Test {
     function test_DoSAttackMitigated() public {
         // Registra o atacante
         attacker.register(address(vulnerableFixed));
-        
+
         assertEq(vulnerableFixed.getUserCount(), 3);
         assertEq(address(vulnerableFixed).balance, 10 ether);
-        
+
         // Distribuição funciona mesmo com atacante registrado
         vulnerableFixed.distribute();
-        
+
         // Verifica que os saldos foram atualizados (valor calculado pelo contrato)
         uint256 expectedAmount = address(vulnerableFixed).balance / vulnerableFixed.getUserCount();
         assertEq(vulnerableFixed.getBalance(user1), expectedAmount);
         assertEq(vulnerableFixed.getBalance(user2), expectedAmount);
         assertEq(vulnerableFixed.getBalance(address(attacker)), expectedAmount);
-        
+
         // Usuários legítimos conseguem sacar
         vm.prank(user1);
         vulnerableFixed.withdraw();
         assertEq(user1.balance, expectedAmount);
         assertEq(vulnerableFixed.getBalance(user1), 0);
-        
+
         vm.prank(user2);
         vulnerableFixed.withdraw();
         assertEq(user2.balance, expectedAmount);
         assertEq(vulnerableFixed.getBalance(user2), 0);
-        
+
         // Atacante tenta sacar mas falha (seu receive() reverte)
         vm.prank(address(attacker));
         vm.expectRevert(bytes("Transfer failed"));
         vulnerableFixed.withdraw();
-        
+
         // Saldo do atacante permanece (pode tentar resolver o problema)
         assertEq(vulnerableFixed.getBalance(address(attacker)), expectedAmount);
     }
@@ -72,10 +72,10 @@ contract DosFixedTest is Test {
     function test_RegisterWithEvent() public {
         vm.expectEmit(true, false, false, false);
         emit Registered(user3);
-        
+
         vm.prank(user3);
         vulnerableFixed.register();
-        
+
         assertEq(vulnerableFixed.getUserCount(), 3);
         assertEq(vulnerableFixed.getUser(2), user3);
     }
@@ -84,22 +84,22 @@ contract DosFixedTest is Test {
     function test_DistributeWithEvent() public {
         uint256 userCount = vulnerableFixed.getUserCount();
         uint256 amount = address(vulnerableFixed).balance / userCount;
-        
+
         vm.expectEmit(true, false, false, true);
         emit DistributionCalculated(userCount, amount);
-        
+
         vulnerableFixed.distribute();
     }
 
     /// @dev Testa saque com eventos
     function test_WithdrawWithEvent() public {
         vulnerableFixed.distribute();
-        
+
         uint256 amount = vulnerableFixed.getBalance(user1);
-        
+
         vm.expectEmit(true, false, false, true);
         emit Withdrawn(user1, amount);
-        
+
         vm.prank(user1);
         vulnerableFixed.withdraw();
     }
@@ -115,25 +115,25 @@ contract DosFixedTest is Test {
     function test_MultipleDistributionsAndWithdrawals() public {
         // Primeira distribuição
         vulnerableFixed.distribute();
-        
+
         uint256 firstAmount = vulnerableFixed.getBalance(user1);
         assertEq(firstAmount, 5 ether); // 10 ether / 2 users
-        
+
         // Adiciona mais ETH ao contrato
         vm.deal(address(vulnerableFixed), 20 ether);
-        
+
         // Segunda distribuição
         vulnerableFixed.distribute();
-        
+
         uint256 secondAmount = vulnerableFixed.getBalance(user1);
         assertEq(secondAmount, firstAmount + 10 ether); // 5 + (20/2)
-        
+
         // User1 saca tudo
         vm.prank(user1);
         vulnerableFixed.withdraw();
         assertEq(user1.balance, 15 ether);
         assertEq(vulnerableFixed.getBalance(user1), 0);
-        
+
         // User1 tenta sacar novamente (sem saldo)
         vm.prank(user1);
         vm.expectRevert(bytes("No balance to withdraw"));
@@ -143,11 +143,11 @@ contract DosFixedTest is Test {
     /// @dev Testa recebimento de ETH
     function test_ReceiveEther() public {
         uint256 initialBalance = address(vulnerableFixed).balance;
-        
+
         vm.deal(user3, 7 ether);
         vm.prank(user3);
-        (bool success, ) = address(vulnerableFixed).call{value: 7 ether}("");
-        
+        (bool success,) = address(vulnerableFixed).call{value: 7 ether}("");
+
         assertTrue(success);
         assertEq(address(vulnerableFixed).balance, initialBalance + 7 ether);
     }
@@ -162,10 +162,10 @@ contract DosFixedTest is Test {
     /// @dev Testa saldo inicial zero
     function test_InitialBalanceIsZero() public {
         VulnerableFixed fresh = new VulnerableFixed();
-        
+
         vm.prank(user1);
         fresh.register();
-        
+
         assertEq(fresh.getBalance(user1), 0);
     }
 
@@ -173,7 +173,7 @@ contract DosFixedTest is Test {
     function test_ManyUsers() public {
         VulnerableFixed manyUsers = new VulnerableFixed();
         vm.deal(address(manyUsers), 100 ether);
-        
+
         // Cria endereços de usuários
         address[] memory users = new address[](10);
         for (uint160 i = 0; i < 10; i++) {
@@ -181,17 +181,17 @@ contract DosFixedTest is Test {
             vm.prank(users[i]);
             manyUsers.register();
         }
-        
+
         assertEq(manyUsers.getUserCount(), 10);
-        
+
         // Distribui
         manyUsers.distribute();
-        
+
         // Cada um recebe 10 ether
         for (uint256 i = 0; i < 10; i++) {
             assertEq(manyUsers.getBalance(users[i]), 10 ether);
         }
-        
+
         // Todos conseguem sacar
         for (uint256 i = 0; i < 10; i++) {
             uint256 balanceBefore = users[i].balance;
@@ -199,7 +199,7 @@ contract DosFixedTest is Test {
             manyUsers.withdraw();
             assertEq(users[i].balance, balanceBefore + 10 ether);
         }
-        
+
         assertEq(address(manyUsers).balance, 0);
     }
 
@@ -207,15 +207,15 @@ contract DosFixedTest is Test {
     function test_BalanceRestoredOnFailure() public {
         attacker.register(address(vulnerableFixed));
         vulnerableFixed.distribute();
-        
+
         uint256 attackerBalance = vulnerableFixed.getBalance(address(attacker));
         assertTrue(attackerBalance > 0);
-        
+
         // Tenta sacar (vai falhar)
         vm.prank(address(attacker));
         vm.expectRevert(bytes("Transfer failed"));
         vulnerableFixed.withdraw();
-        
+
         // Saldo foi restaurado
         assertEq(vulnerableFixed.getBalance(address(attacker)), attackerBalance);
     }

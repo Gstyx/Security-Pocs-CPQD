@@ -15,15 +15,15 @@ contract Vulnerable {
 
         for (uint256 i = 0; i < users.length; i++) {
             // ❌ Vulnerável: se UM falhar, tudo falha
-            (bool success, ) = payable(users[i]).call{value: amount}("");
+            (bool success,) = payable(users[i]).call{value: amount}("");
             require(success, "Transfer failed");
         }
     }
-    
+
     function getUserCount() external view returns (uint256) {
         return users.length;
     }
-    
+
     function getUser(uint256 index) external view returns (address) {
         return users[index];
     }

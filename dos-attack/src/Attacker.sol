@@ -3,9 +3,7 @@ pragma solidity ^0.8.20;
 
 contract Attacker {
     function register(address vulnerable) external {
-        (bool ok, ) = vulnerable.call(
-            abi.encodeWithSignature("register()")
-        );
+        (bool ok,) = vulnerable.call(abi.encodeWithSignature("register()"));
         require(ok);
     }
 
